@@ -1,0 +1,89 @@
+﻿<Window x:Class="WeatherApp.View.WeatherWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WeatherApp.View"
+        xmlns:vm="clr-namespace:WeatherApp.ViewModel"
+        xmlns:converters="clr-namespace:WeatherApp.ViewModel.ValueConverters"
+        mc:Ignorable="d"
+        Title="WeatherWindow" Height="600" Width="400">
+    <!-- xmlns = XML Name Space -->
+    <!-- xmlns:vm="clr-namespace:WeatherApp.ViewModel" kreira instancu -->
+
+    <Window.Resources>
+        <vm:WeatherVM x:Key="vm"/>
+        <!-- iz vm Name Space-a kreiramo vm objekat. 
+        Sada imamo instancu WheatherVM koju cemo koristiti kao data context za ceo prozor, ili npr. za grid -->
+
+        <converters:BoolToRainConverter x:Key="boolToRain"/>
+    </Window.Resources>
+
+    <Grid DataContext="{StaticResource vm}">
+        <!-- vidi prethodni komentar -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <StackPanel Margin="20">
+            <TextBlock Text="Search for a city:"/>
+            <TextBox Text="{Binding Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            <Button Margin="0,10"
+                    Command="{Binding SearchCommand}"
+                    CommandParameter="{Binding Query}"
+                    Content="Search"/>
+            <ListView ItemsSource="{Binding Cities}"
+                      SelectedValue="{Binding SelectedCity}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <TextBlock>
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0}, {1} ({2})">
+                                        <Binding Path="LocalizedName"/>
+                                        <Binding Path="AdministrativeArea.LocalizedName"/>
+                                        <Binding Path="Country.LocalizedName"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+
+        <Grid Grid.Row="1"
+              Background="#4392f1"
+              DataContext="{Binding CurrentConditions}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Margin="0,10">
+                <!-- posto TextBlock ispod nije bind-ovan za DataContext CurrentConditions,
+                ovog Grid-a, onda cemo kreirati novi DataContext za taj TextBlock -->
+                <TextBlock DataContext="{StaticResource vm}"
+                           Text="{Binding SelectedCity.LocalizedName}"
+                           Foreground="#f4f4f8"
+                           FontSize="20"
+                           Margin="20,0"/>
+                <TextBlock Text="{Binding WeatherText}"
+                           Foreground="#f4f4f8"
+                           FontSize="18"
+                           Margin="20,0"/>
+                <TextBlock Text="{Binding HasPrecipitation, Converter={StaticResource boolToRain}}"
+                           Foreground="#f4f4f8"
+                           FontSize="16"
+                           Margin="20,0"/>
+            </StackPanel>
+
+            <!-- Posto temperatura ima imperial i metric onda kucamo tacku i biramo sta zelimo da prikazemo -->
+            <TextBlock Grid.Column="1"
+                       VerticalAlignment="Center"
+                       Text="{Binding Temperature.Metric.Value, StringFormat={}{0}°C}"
+                       Foreground="#f4f4f8"
+                       FontSize="30"
+                       Margin="20,0"/>
+        </Grid>
+    </Grid>
+</Window>
